@@ -11,21 +11,21 @@ def check_sumbol():
         return str_
 
 
-def registration(account_name='', login=''):
-    conn = sqlite3.connect(r'C:\Users\Dmitrii\Desktop\KniggaPoisk\database\account_login.db')
+def registration(username='', login=''):
+    conn = sqlite3.connect(r'database\account_login.db')
     cur = conn.cursor()
     cur.execute('''
        CREATE TABLE IF NOT EXISTS Users (
-       name TEXT PRIMARY KEY,
+       username TEXT PRIMARY KEY,
        login TEXT NOT NULL,
        password TEXT NOT NULL
        )
        ''')
     conn.commit()
     print('Регистрация')
-    if account_name == '':
+    if username == '':
         print('Имя:', end=' ')
-        account_name = check_sumbol()
+        username = check_sumbol()
         print('Логин:', end=' ')
         login = check_sumbol()
         login = hashlib.sha1(login.encode()).hexdigest()
@@ -37,18 +37,18 @@ def registration(account_name='', login=''):
     if password1 != password2:
         print('Ошибра, пароли не совпадают, попробуйте еще раз')
         conn.close()
-        return registration(account_name, login)
+        return registration(username, login)
     else:
-        cur.execute(f"""INSERT INTO users(name, login, password) 
-              VALUES(?, ?, ?)""", (account_name, login, password2))
+        cur.execute(f"""INSERT INTO users(username, login, password) 
+              VALUES(?, ?, ?)""", (username, login, password2))
         conn.commit()
         conn.close()
         print('Вы успешно зарегестрированы')
-        return account_name
+        return username
 
 
 def login_():
-    conn = sqlite3.connect(r'C:\Users\Dmitrii\Desktop\KniggaPoisk\database\account_login.db')
+    conn = sqlite3.connect(r'database\account_login.db')
     cur = conn.cursor()
     # Вход в аккаунт
     print('Вход в аккаунт')
@@ -60,22 +60,60 @@ def login_():
     result = cur.fetchone()
     if result != None and password == result[2]:
         print('Вы успешно зашли в аккаунт')
-        account_name = result[0]
+        username = result[0]
         conn.close()
-        return account_name
+        return username
     else:
         print('Логин или пароль неверен')
         conn.close()
-        return login_
+        return login_()
 
 
-# def account_info(name):
-#     conn = sqlite3.connect(r'C:\Users\Dmitrii\Desktop\KniggaPoisk\database\account_info.db')
-#     cur = conn.cursor()
-#     cur.execute(f'''
-#            CREATE TABLE IF NOT EXISTS Users_info (
-#            name TEXT PRIMARY KEY,
-#            genre TEXT NOT NULL,
-#            age TEXT NOT NULL,
-#            )
-#            ''')
+def account_info(username):
+    conn = sqlite3.connect(r'database\account_login.db')
+    cur = conn.cursor()
+    cur.execute('''
+           CREATE TABLE IF NOT EXISTS Users_info (
+           username TEXT PRIMARY KEY,
+           likes_genre TEXT NOT NULL,
+           age TEXT NOT NULL
+           )
+           ''')
+    conn.commit()
+    likes_genre = ''
+    genres = ['биография',
+             'боевик',
+             'вестерн',
+             'военный',
+             'детектив',
+             'документальный',
+             'драма',
+             'исторический',
+             'комедия',
+             'короткометражка',
+             'криминал',
+             'мелодрама',
+             'мюзикл',
+             'приключения',
+             'семейный',
+             'спорт',
+             'триллер',
+             'ужасы',
+             'фантастика',
+             'фэнтези']
+    print('Какие жанры вы предпочитаете?')
+    while True:
+        genre = input().lower()
+        if genre in genres:
+            likes_genre += ',' + genre
+        print('Еще какие то?')
+        x = input().lower()
+        if x == 'нет':
+            break
+    print('Введите ваш возраст:', end=' ')
+    age = int(input())
+    cur.execute(f"""INSERT INTO users_info(username, likes_genre, age) 
+                  VALUES(?, ?, ?)""", (username, likes_genre, age))
+    conn.commit()
+    conn.close()
+    return username
