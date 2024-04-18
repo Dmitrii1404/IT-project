@@ -7,6 +7,8 @@ import fake_useragent
 import json
 import csv
 import requests
+import hashlib
+import sqlite3
 
 count_ = 0
 
@@ -18,28 +20,33 @@ async def fetch(session, url, headers=None):
         return await response.text()
 
 
-async def parse_film(session, name, url, writer, semaphore):
+async def parse_film(session, name, url, conn, cur, semaphore):
     global count_
+    max = 20
+
     photo_url = ''
-    name = name.split('.')[0] # Получаем номер фильма из списка
-    Run_time = ''             # Продолжительность фильма
-    genres = []               # Список жанров
-    rating = ''               # Оценка
-    number_of_ratings = ''    # Количество оценок
-    description = ''          # Описание
-    Release_date = ''         # Дата релиза
-    Country = []              # Страна
-    Budget = ''               # Бюджет
-    key_words = []            # Ключевые слова
-    similars = []             # Похожие фильмы
+    name = name.split('.')[0]  # Получаем номер фильма из списка
+    Run_time = ''  # Продолжительность фильма
+    genres = []  # Список жанров
+    rating = ''  # Оценка
+    number_of_ratings = ''  # Количество оценок
+    description = ''  # Описание
+    Release_date = ''  # Дата релиза
+    Country = []  # Страна
+    Budget = ''  # Бюджет
+    key_words = []  # Ключевые слова
+    similars = []  # Похожие фильмы
     user = fake_useragent.UserAgent().random
     header = {"user-agent": user}
     f = list(url.split('/'))
     h = f[4]
-    f = '/'.join(f[:5]) # Отрезаю лишнюю часть от ссылки
-    URL_ = f # Сохраняю ссылку
+    f = '/'.join(f[:5])  # Отрезаю лишнюю часть от ссылки
+    URL_ = f  # Сохраняю ссылку
 
-    if int(name) <= 10:
+    cur.execute("SELECT * FROM films WHERE tag = ?", (h,))
+    result = cur.fetchone()
+
+    if int(name) <= max and result == None:  # чтоб ноут долго не простаивал, парсинг разделяю на части, так что это условие просто для моего удобства
         try:
             async with semaphore:
                 html = await fetch(session, f, headers=header)
@@ -86,8 +93,8 @@ async def parse_film(session, name, url, writer, semaphore):
 
             try:
                 some_info = \
-                    soup.find_all('ul', class_='ipc-metadata-list ipc-metadata-list--dividers-all ipc-metadata-list--base')[
-                        1]
+                    soup.find_all('ul',
+                                  class_='ipc-metadata-list ipc-metadata-list--dividers-all ipc-metadata-list--base')[1]
                 some_info = some_info.find_all('li', class_='ipc-metadata-list__item')
             except:
                 pass
@@ -127,6 +134,7 @@ async def parse_film(session, name, url, writer, semaphore):
                     similar = s.find('a',
                                      class_='ipc-poster-card__title ipc-poster-card__title--clamp-2 ipc-poster-card__title--clickable').get(
                         'href')
+                    similar = similar.split('/')[2]
                     similars.append(similar)
             except:
                 pass
@@ -141,28 +149,45 @@ async def parse_film(session, name, url, writer, semaphore):
 
             photo_ = soup.find_all('div', class_='sc-7c0a9e7c-2 ghbUKT')[0]
             img = photo_.find('img')
-            imglink = img.get('src')
-            image = requests.get(imglink).content
-            with open(r'imagine/' + h + '.jpg', 'wb') as imgfile:
-                imgfile.write(image)
 
+            try:
+                imglink = img.get('srcset').split()[2]
+                image = requests.get(imglink).content
+                with open(r'imagine/' + h + '.jpg', 'wb') as imgfile:
+                    imgfile.write(image)
+            except:
+                imglink = img.get('src')
+                print(imglink)
+                image = requests.get(imglink).content
+                with open(r'imagine/' + h + '.jpg', 'wb') as imgfile:
+                    imgfile.write(image)
 
             try:
                 f = f + '/keywords'
-                async with semaphore:
-                    html = await fetch(session, f, headers=header)
-                count_ += 1
-                print(f"Iteration: {count_}")
-                soup = BeautifulSoup(html, "lxml")
+                res = requests.get(f, headers=header).text  # Получение страницы и передача user agent
+                soup = BeautifulSoup(res, "lxml")
                 key_words_html = soup.find_all('div', class_='ipc-metadata-list-summary-item__tc')
                 for word in key_words_html:
                     key_words.append(word.text)  # Сохранение ключевых слов
             except Exception as e:
                 print(f"Error parsing keywords for {name}: {e}")
 
-
-            writer.writerow([
-                name,
+            cur.execute(f"""INSERT INTO films(
+                tag,
+                Name,
+                URL,
+                Runtime,
+                Genres,
+                Rating,
+                Number_of_ratings,
+                Description,
+                Release_date,
+                Country,
+                Budget,
+                key_words,
+                Similars) 
+                              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+                h,
                 Name,
                 URL_,
                 Run_time,
@@ -175,9 +200,17 @@ async def parse_film(session, name, url, writer, semaphore):
                 Budget,
                 ', '.join(key_words),
                 ', '.join(similars)
-            ])
+            ))
+            conn.commit()
+
+
+
+
         except Exception as e:
             print(f"Error parsing {name}: {e}")
+
+    elif int(name) <= max:
+        print(f'Фильм с тегом {h} уже есть в дб')
 
 
 async def main():
@@ -186,29 +219,33 @@ async def main():
         with open("movie_URL_IMDb.json", "r", encoding="UTF-8") as file:
             all_films = json.load(file)
 
-        with open("films1.csv", "a", newline='', encoding="UTF-16") as file2:
-            writer = csv.writer(file2, delimiter="\t")
-            writer.writerow([
-                'Number',
-                'Name',
-                'URL',
-                'Runtime',
-                'Genres',
-                'Rating',
-                'Number of ratings',
-                'Description',
-                'Release date',
-                'Country',
-                'Budget',
-                'key words',
-                'Similars'
-            ])
+        conn = sqlite3.connect('films_info.db')
+        cur = conn.cursor()
+        cur.execute('''
+               CREATE TABLE IF NOT EXISTS films (
+               tag TEXT PRIMARY KEY,
+               Name TEXT NOT NULL,
+               URL TEXT NOT NULL,
+               Runtime TEXT NOT NULL,
+               Genres TEXT NOT NULL,
+               Rating TEXT NOT NULL,
+               Number_of_ratings TEXT NOT NULL,
+               Description TEXT NOT NULL,
+               Release_date TEXT NOT NULL,
+               Country TEXT NOT NULL,
+               Budget TEXT NOT NULL,
+               key_words TEXT NOT NULL,
+               Similars TEXT NOT NULL
+               )
+               ''')
+        conn.commit()
+        tasks = []
+        for name, url in all_films.items():
+            tasks.append(parse_film(session, name, url, conn, cur, semaphore))
 
-            tasks = []
-            for name, url in all_films.items():
-                tasks.append(parse_film(session, name, url, writer, semaphore))
+        await asyncio.gather(*tasks)
 
-            await asyncio.gather(*tasks)
+        conn.close()
 
 
 async def run_main():
