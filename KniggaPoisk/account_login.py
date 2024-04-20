@@ -12,7 +12,7 @@ def check_sumbol():
 
 
 def registration(username='', login=''):
-    conn = sqlite3.connect(r'database\account_login.db')
+    conn = sqlite3.connect(r'database\account_info.db')
     cur = conn.cursor()
     cur.execute('''
        CREATE TABLE IF NOT EXISTS Users (
@@ -48,7 +48,7 @@ def registration(username='', login=''):
 
 
 def login_():
-    conn = sqlite3.connect(r'database\account_login.db')
+    conn = sqlite3.connect(r'database\account_info.db')
     cur = conn.cursor()
     # Вход в аккаунт
     print('Вход в аккаунт')
@@ -70,7 +70,7 @@ def login_():
 
 
 def account_info(username):
-    conn = sqlite3.connect(r'database\account_login.db')
+    conn = sqlite3.connect(r'database\account_info.db')
     cur = conn.cursor()
     cur.execute('''
            CREATE TABLE IF NOT EXISTS Users_info (

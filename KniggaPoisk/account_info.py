@@ -1,45 +1,40 @@
-import hashlib
+# ключ - тег фильма -> username - просмотрен / отзыв / оценка
 import sqlite3
 
-def sign():
-    conn = sqlite3.connect('my_database.db')
+def reviews_film(tag, username):
+    conn = sqlite3.connect(r'database\reviews_film.db')
     cur = conn.cursor()
     cur.execute('''
-       CREATE TABLE IF NOT EXISTS Users (
-       name TEXT PRIMARY KEY,
-       login TEXT NOT NULL,
-       password TEXT NOT NULL
-       )
-       ''')
+           CREATE TABLE IF NOT EXISTS reviews (
+           tag TEXT NOT NULL,
+           username TEXT NOT NULL,
+           review TEXT NOT NULL,
+           rating TEXT NOT NULL
+           )
+           ''')
     conn.commit()
-    print('Вы зарегестрированы?')
-    i_want = input()
-    if i_want == 'нет':
-        # регистрация
-        print('Имя:', end=' ')
-        accaunt_name = input()
-        print('Логин:', end=' ')
-        login = hashlib.sha1(input().encode()).hexdigest()
-        print('Пароль:', end=' ')
-        password = hashlib.sha1((input()).encode()).hexdigest()
-        cur.execute(f"""INSERT INTO users(name, login, password) 
-              VALUES(?, ?, ?)""", (accaunt_name, login, password))
-        conn.commit()
-        print(f'login = {login}, password = {password} was write')
+    # Будем считать, что если человек пишет отзыв, то он смотрел фильм
+    print('Напишите свое мнение о фильме: ', end='')
+    review = input()
+    print('Ваша оценка от 1 до 10: ', end='')
+    while True:
+        try:
+            rating = int(input())
+            if 1 <= rating <= 10:
+                break
+            else:
+                print('Оценка от 1 до 10!!!')
+        except:
+            print('Неверный формат ввода, введите целое число!')
 
-    # Вход в аккаунт
-    print('Войдите в аккаунт')
-    print('Логин:', end=' ')
-    login = hashlib.sha1(input().encode()).hexdigest()
-    print('Пароль:', end=' ')
-    password = hashlib.sha1((input()).encode()).hexdigest()
-    cur.execute("SELECT * FROM Users WHERE login = ?", (login,))
+    cur.execute("SELECT * FROM reviews WHERE tag=? AND username = ?", (tag, username))
     result = cur.fetchone()
-    if result != None and password == result[2]:
-        print('Хорош, таких мы знаем')
+    if result == None:
+        cur.execute(f"""INSERT INTO reviews(tag, username, review, rating) 
+                      VALUES(?, ?, ?, ?)""", (tag, username, review, rating))
+        conn.commit()
     else:
-        print('Ты кто такой, иди отсюда')
+        cur.execute(f"""UPDATE reviews SET review=?, rating=? WHERE tag=? AND username=?""",
+                    (review, rating, tag, username))
+        conn.commit()
     conn.close()
-    accaunt_name = result[0] if result != None else ''
-
-    return accaunt_name

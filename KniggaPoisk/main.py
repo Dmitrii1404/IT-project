@@ -1,4 +1,5 @@
 import account_login
+import account_info
 
 global username # Сохраняем username пользователя
 
@@ -27,6 +28,12 @@ if __name__ == '__main__':
         elif i_want == 'предпочтения':
             if username != '':
                 print(account_login.account_info(username))
+            else:
+                print('Войдите в аккаунт')
+        elif i_want == 'оценка':
+            if username != '':
+                tag = input()
+                account_info.reviews_film(tag, username)
             else:
                 print('Войдите в аккаунт')
         elif i_want == 'уйти':
