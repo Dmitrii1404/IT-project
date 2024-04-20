@@ -36,5 +36,10 @@ if __name__ == '__main__':
                 account_info.reviews_film(tag, username)
             else:
                 print('Войдите в аккаунт')
+        elif i_want == 'поменять логин':
+            if username != '':
+                account_login.change_username(username)
+            else:
+                print('Войдите в аккаунт')
         elif i_want == 'уйти':
             break

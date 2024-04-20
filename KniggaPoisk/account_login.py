@@ -1,7 +1,7 @@
 import hashlib
 import sqlite3
 
-
+# Проверка на наличие символов в строке
 def check_sumbol():
     str_ = input()
     if str_ == '':
@@ -10,7 +10,18 @@ def check_sumbol():
     else:
         return str_
 
+# Проверка, есть ли данный username в бд
+def check_username(username):
+    conn = sqlite3.connect(r'database\account_info.db')
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM users WHERE username=?", (username,))
+    result = cur.fetchone()
+    if result == None:
+        return True
+    else:
+        return False
 
+# Регистрация аккаунта
 def registration(username='', login=''):
     conn = sqlite3.connect(r'database\account_info.db')
     cur = conn.cursor()
@@ -24,11 +35,17 @@ def registration(username='', login=''):
     conn.commit()
     print('Регистрация')
     if username == '':
-        print('Имя:', end=' ')
-        username = check_sumbol()
-        print('Логин:', end=' ')
-        login = check_sumbol()
-        login = hashlib.sha1(login.encode()).hexdigest()
+        while True:
+            print('Имя:', end=' ')
+            username = check_sumbol()
+            if check_username(username):
+                print('Логин:', end=' ')
+                login = check_sumbol()
+                login = hashlib.sha1(login.encode()).hexdigest()
+                break
+            else:
+                print('Данный username занят(((')
+
     print('Пароль:', end=' ')
     password1 = check_sumbol()
     password1 = hashlib.sha1(password1.encode()).hexdigest()
@@ -46,7 +63,7 @@ def registration(username='', login=''):
         print('Вы успешно зарегестрированы')
         return username
 
-
+# Вход в аккаунт
 def login_():
     conn = sqlite3.connect(r'database\account_info.db')
     cur = conn.cursor()
@@ -68,7 +85,7 @@ def login_():
         conn.close()
         return login_()
 
-
+# Добавление информации о предпочтениях
 def account_info(username):
     conn = sqlite3.connect(r'database\account_info.db')
     cur = conn.cursor()
@@ -82,25 +99,25 @@ def account_info(username):
     conn.commit()
     likes_genre = ''
     genres = ['биография',
-             'боевик',
-             'вестерн',
-             'военный',
-             'детектив',
-             'документальный',
-             'драма',
-             'исторический',
-             'комедия',
-             'короткометражка',
-             'криминал',
-             'мелодрама',
-             'мюзикл',
-             'приключения',
-             'семейный',
-             'спорт',
-             'триллер',
-             'ужасы',
-             'фантастика',
-             'фэнтези']
+              'боевик',
+              'вестерн',
+              'военный',
+              'детектив',
+              'документальный',
+              'драма',
+              'исторический',
+              'комедия',
+              'короткометражка',
+              'криминал',
+              'мелодрама',
+              'мюзикл',
+              'приключения',
+              'семейный',
+              'спорт',
+              'триллер',
+              'ужасы',
+              'фантастика',
+              'фэнтези']
     print('Какие жанры вы предпочитаете?')
     while True:
         genre = input().lower()
@@ -117,3 +134,37 @@ def account_info(username):
     conn.commit()
     conn.close()
     return username
+
+# Подключение бд для изменения username
+def change_username(username):
+    print('Введите новый username: ', end='')
+    while True:
+        new_username = input()
+        if check_username(new_username):
+            break
+        else:
+            print('Данный username занят(((')
+
+    conn1 = sqlite3.connect(r'database\account_info.db')
+    cur1 = conn1.cursor()
+    name_table = 'users_info'
+    change_username_(username, new_username, conn1, cur1, name_table)
+    name_table = 'users'
+    change_username_(username, new_username, conn1, cur1, name_table)
+
+    conn2 = sqlite3.connect(r'database\reviews_film.db')
+    cur2 = conn2.cursor()
+    name_table = 'reviews'
+    change_username_(username, new_username, conn2, cur2, name_table)
+
+    conn1.close()
+    conn2.close()
+
+# Изменение username
+def change_username_(username, new_username, conn, cur, name_table):
+    cur.execute(f"SELECT * FROM {name_table} WHERE username = ?", (username,))
+    result = cur.fetchone()
+    if result != None:
+        cur.execute(f"""UPDATE {name_table} SET username=? WHERE username=?""",
+                    (new_username, username))
+        conn.commit()

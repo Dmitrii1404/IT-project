@@ -5,7 +5,7 @@ def reviews_film(tag, username):
     conn = sqlite3.connect(r'database\reviews_film.db')
     cur = conn.cursor()
     cur.execute('''
-           CREATE TABLE IF NOT EXISTS reviews (
+           CREATE TABLE IF NOT EXISTS (
            tag TEXT NOT NULL,
            username TEXT NOT NULL,
            review TEXT NOT NULL,
