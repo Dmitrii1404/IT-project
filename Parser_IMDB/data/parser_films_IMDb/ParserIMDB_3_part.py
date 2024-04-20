@@ -5,9 +5,7 @@ import asyncio
 from bs4 import BeautifulSoup
 import fake_useragent
 import json
-import csv
 import requests
-import hashlib
 import sqlite3
 
 count_ = 0
@@ -23,8 +21,8 @@ async def fetch(session, url, headers=None):
 async def parse_film(session, name, url, conn, cur, semaphore):
     global count_
     max = 20
-
     photo_url = ''
+
     name = name.split('.')[0]  # Получаем номер фильма из списка
     Run_time = ''  # Продолжительность фильма
     genres = []  # Список жанров
@@ -36,6 +34,7 @@ async def parse_film(session, name, url, conn, cur, semaphore):
     Budget = ''  # Бюджет
     key_words = []  # Ключевые слова
     similars = []  # Похожие фильмы
+
     user = fake_useragent.UserAgent().random
     header = {"user-agent": user}
     f = list(url.split('/'))
@@ -46,7 +45,7 @@ async def parse_film(session, name, url, conn, cur, semaphore):
     cur.execute("SELECT * FROM films WHERE tag = ?", (h,))
     result = cur.fetchone()
 
-    if int(name) <= max and result == None:  # чтоб ноут долго не простаивал, парсинг разделяю на части, так что это условие просто для моего удобства
+    if int(name) <= max and result == None:  # чтоб ноут долго не простаивал, парсинг разделяю на части, так что условие name <= max просто для моего удобства
         try:
             async with semaphore:
                 html = await fetch(session, f, headers=header)
