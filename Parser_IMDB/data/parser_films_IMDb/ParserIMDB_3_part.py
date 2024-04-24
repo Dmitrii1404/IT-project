@@ -14,13 +14,13 @@ count_ = 0
 async def fetch(session, url, headers=None):
     async with session.get(url, headers=headers) as response:
         # Задержка отправления, чтоб не забанил сайт (и мб это помогает прогрузить номально страницу)
-        await asyncio.sleep(3)
+        #await asyncio.sleep(1)
         return await response.text()
 
 
 async def parse_film(session, name, url, conn, cur, semaphore):
     global count_
-    max = 20
+    max = 10
     photo_url = ''
 
     name = name.split('.')[0]  # Получаем номер фильма из списка
@@ -32,6 +32,9 @@ async def parse_film(session, name, url, conn, cur, semaphore):
     Release_date = ''  # Дата релиза
     Country = []  # Страна
     Budget = ''  # Бюджет
+    Director = '' # Режисер
+    Writer = '' # Сценарист
+    Actors = [] # Актеры
     key_words = []  # Ключевые слова
     similars = []  # Похожие фильмы
 
@@ -119,6 +122,24 @@ async def parse_film(session, name, url, conn, cur, semaphore):
                 pass
 
             try:
+                info = soup.find('ul', class_='ipc-metadata-list ipc-metadata-list--dividers-all sc-bfec09a1-8 bHYmJY ipc-metadata-list--base')
+                info = info.find_all('a', class_='ipc-metadata-list-item__list-content-item ipc-metadata-list-item__list-content-item--link')
+                Writer = info[1].text
+                Director = info[0].text
+            except:
+                pass
+
+            try:
+                info = soup.find_all('div', class_='sc-bfec09a1-7 gWwKlt')
+                for actor in info:
+                    actor_name = actor.find('a', class_='sc-bfec09a1-1 gCQkeh').text
+                    actor_role = actor.find('span', class_='sc-bfec09a1-4 kvTUwN').text
+                    Actors.append([actor_name, actor_role])
+            except:
+                pass
+
+
+            try:
                 Run_time = soup.find('ul',
                                      class_='ipc-metadata-list ipc-metadata-list--dividers-none ipc-metadata-list--compact ipc-metadata-list--base')
                 Run_time = Run_time.find('li', class_='ipc-metadata-list__item').find('div',
@@ -183,9 +204,12 @@ async def parse_film(session, name, url, conn, cur, semaphore):
                 Release_date,
                 Country,
                 Budget,
+                Director,
+                Writer,
+                Actors,
                 key_words,
                 Similars) 
-                              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+                              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
                 h,
                 Name,
                 URL_,
@@ -197,6 +221,9 @@ async def parse_film(session, name, url, conn, cur, semaphore):
                 Release_date,
                 ', '.join(Country),
                 Budget,
+                Director,
+                Writer,
+                '; '.join(','.join(i) for i in Actors),
                 ', '.join(key_words),
                 ', '.join(similars)
             ))
@@ -213,7 +240,7 @@ async def parse_film(session, name, url, conn, cur, semaphore):
 
 
 async def main():
-    semaphore = asyncio.Semaphore(5)  # Ограничение на количество одновременно выполняемых задач
+    semaphore = asyncio.Semaphore(10)  # Ограничение на количество одновременно выполняемых задач
     async with aiohttp.ClientSession() as session:
         with open("movie_URL_IMDb.json", "r", encoding="UTF-8") as file:
             all_films = json.load(file)
@@ -233,6 +260,9 @@ async def main():
                Release_date TEXT NOT NULL,
                Country TEXT NOT NULL,
                Budget TEXT NOT NULL,
+               Director TEXT NOT NULL,
+               Writer TEXT NOT NULL,
+               Actors TEXT NOT NULL,
                key_words TEXT NOT NULL,
                Similars TEXT NOT NULL
                )

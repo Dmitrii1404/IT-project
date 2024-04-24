@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ea7391d2-439e-443d-8fe3-0100543137f7" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../../KniggaPoisk/my_database.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../KniggaPoisk/search_by_name_films.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ParserIMDB_3_part.py" beforeDir="false" afterPath="$PROJECT_DIR$/ParserIMDB_3_part.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 3
+}]]></component>
+  <component name="ProjectId" id="2fVnUrAq2pRVt6bcSNLqhH8PwbQ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ea7391d2-439e-443d-8fe3-0100543137f7" name="Changes" comment="" />
+      <created>1713895132316</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1713895132316</updated>
+    </task>
+    <servers />
+  </component>
+</project>
