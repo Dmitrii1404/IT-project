@@ -1,15 +1,20 @@
 # Здесь я реализую поиск фильмов по названию, то есть поисковик
 
 import csv
-print('прив')
+
+print("прив")
 input()
 # Здесь указать базу данных, где расположенны фильмы
-with open(r'C:\Users\Dmitrii\Desktop\project it\data\data_base_films\films_info_IMDb.csv', 'r', encoding="UTF-16") as file:
+with open(
+    r"C:\Users\Dmitrii\Desktop\project it\data\data_base_films\films_info_IMDb.csv",
+    "r",
+    encoding="UTF-16",
+) as file:
     reader_object = csv.reader(file, delimiter="\t")
     count_ = 0
-    dict_ = {} # Сюда сохраняем результаты поиска
+    dict_ = {}  # Сюда сохраняем результаты поиска
 
-    x = input().lower() # Ввод запроса
+    x = input().lower()  # Ввод запроса
 
     for line in reader_object:
         count_ += 1
@@ -34,6 +39,5 @@ with open(r'C:\Users\Dmitrii\Desktop\project it\data\data_base_films\films_info_
                     dict_[c] += [l]
                 else:
                     dict_[c] = [l]
-
 
     print(dict_)
