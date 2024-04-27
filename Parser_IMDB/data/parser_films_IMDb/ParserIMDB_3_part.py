@@ -69,7 +69,7 @@ async def parse_film(session, name, url, conn, cur, semaphore):
                 pass
 
             try:
-                description = soup.find('span', class_='sc-466bb6c-0 hlbAws').text
+                description = soup.find('span', class_='sc-a31b0662-0 iBnSmy').text
             except:
                 pass
 
@@ -179,7 +179,7 @@ async def parse_film(session, name, url, conn, cur, semaphore):
                 imglink = img.get('src')
                 print(imglink)
                 image = requests.get(imglink).content
-                with open(r'imagine/' + h + '.jpg', 'wb') as imgfile:
+                with open(r'C:/Users/Dmitrii/Desktop/data/imagine/' + h + '.jpg', 'wb') as imgfile:
                     imgfile.write(image)
 
             try:
