@@ -1,7 +1,7 @@
 import account_login
 import account_info
 
-global username # Сохраняем username пользователя
+global username  # Сохраняем username пользователя
 
 
 def login():
@@ -16,30 +16,30 @@ def registration():
     return username
 
 
-if __name__ == '__main__':
-    username = ''
+if __name__ == "__main__":
+    username = ""
     while True:
-        print('Что вы хотите сделать?')
+        print("Что вы хотите сделать?")
         i_want = input().lower()
-        if i_want == 'войти в аккаунт':
+        if i_want == "войти в аккаунт":
             print(login())
-        elif i_want == 'зарегестрироваться':
+        elif i_want == "зарегестрироваться":
             print(registration())
-        elif i_want == 'предпочтения':
-            if username != '':
+        elif i_want == "предпочтения":
+            if username != "":
                 print(account_login.account_info(username))
             else:
-                print('Войдите в аккаунт')
-        elif i_want == 'оценка':
-            if username != '':
+                print("Войдите в аккаунт")
+        elif i_want == "оценка":
+            if username != "":
                 tag = input()
                 account_info.reviews_film(tag, username)
             else:
-                print('Войдите в аккаунт')
-        elif i_want == 'поменять логин':
-            if username != '':
+                print("Войдите в аккаунт")
+        elif i_want == "поменять логин":
+            if username != "":
                 account_login.change_username(username)
             else:
-                print('Войдите в аккаунт')
-        elif i_want == 'уйти':
+                print("Войдите в аккаунт")
+        elif i_want == "уйти":
             break
