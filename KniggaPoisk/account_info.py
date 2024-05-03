@@ -1,4 +1,4 @@
-# ключ - тег фильма -> username - просмотрен / отзыв / оценка
+# тег фильма / username - просмотрен / отзыв / оценка
 import sqlite3
 
 def reviews_film(tag, username):
