@@ -8,55 +8,56 @@ import json
 import requests
 import sqlite3
 
-count_ = 0
 
 
 async def fetch(session, url, headers=None):
     async with session.get(url, headers=headers) as response:
         # Задержка отправления, чтоб не забанил сайт (и мб это помогает прогрузить номально страницу)
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
         return await response.text()
 
-async def parse_film(session, url, conn, cur, semaphore):
-    global count_
-    max = 100
-    photo_url = ''
 
-    ISBN = '' # Код книги  ----
-    Name = '' # Название   ----
-    Page = '' # Количество страниц  ----
-    Age = '' # Возрастное ограничение  ----
-    URL = '' # Ссылка   ----
-    Runtime = '' # Примерное время чтения  ----
-    Genres = [] # Жанры  ----
-    Topic = [] # Тема  ----
-    Rating = '' # Оценка  ----
-    Number_of_ratings = '' # Количество оценок  ----
-    Description = '' # Описание
-    Release_date = '' # Дата выхода  ----
-    Author = '' # Автор  ----
-    Similars = '' # Похожие книги
+async def parse_film(session, url, conn, cur, semaphore, count_):
+    max = 20
+
+    ISBN = ''  # Код книги  ----
+    Name = ''  # Название   ----
+    Page = ''  # Количество страниц  ----
+    Age = ''  # Возрастное ограничение  ----
+    URL = ''  # Ссылка   ----
+    Genres = []  # Жанры  ----
+    Topic = []  # Тема  ----
+    Rating = ''  # Оценка  ----
+    Number_of_ratings = ''  # Количество оценок  ----
+    Description = ''  # Описание ----
+    Author = ''  # Автор  ----
+    Similars = []  # Похожие книги
 
     user = fake_useragent.UserAgent().random
     header = {"user-agent": user}
     URL = 'https://mybook.ru/' + url
     cur.execute("SELECT * FROM books WHERE URL = ?", (url,))
     result = cur.fetchone()
-
     if count_ <= max and result == None:  # чтоб ноут долго не простаивал, парсинг разделяю на части, так что условие name <= max просто для моего удобства
         try:
             async with semaphore:
                 html = await fetch(session, URL, headers=header)
             soup = BeautifulSoup(html, "lxml")
-            count_ += 1
             print(f"Iteration: {count_}")
 
             try:
                 some_info = soup.find('div', class_='ant-row sc-1c0xbiw-1 cyJjtq')
                 Name = some_info.find('div', class_='m4n24q-0 hJyrxa').text
-                Author = some_info.fint('div', class_='dey4wx-1 jVKkXg').text
+                Author = some_info.find('div', class_='dey4wx-1 jVKkXg').text
+            except:
+                pass
+
+            try:
+                some_info = soup.find('div', class_='ant-row sc-1c0xbiw-1 cyJjtq')
                 some_info = some_info.find('div', class_='ant-col sc-1c0xbiw-9 eSjGMZ')
                 Page = some_info.find_all('p', class_='lnjchu-1 dPgoNf')[0].text
+                if 'печат' not in Page:
+                    Page = 'Неизвестно'
                 Age = some_info.find_all('p', class_='lnjchu-1 dPgoNf')[3].text
             except:
                 pass
@@ -70,11 +71,12 @@ async def parse_film(session, url, conn, cur, semaphore):
 
             try:
                 some_info = soup.find('div', class_='iszfik-14 iSnZQd')
-                some_info_1 = some_info.find_all('div', class_='iszfik-15 BerVK')[0]
-                Release_date = some_info_1.find_all('dd', class_='iszfik-18 iEusfO')[0].text
-                some_info_2 = some_info.find('div', class_='iszfik-15 BerVK')[1]
+                some_info_2 = some_info.find_all('div', class_='iszfik-15 BerVK')[1]
                 ISBN = some_info_2.find_all('dd', class_='iszfik-18 iEusfO')[0].text
-                Runtime = some_info_2.find_all('dd', class_='iszfik-18 iEusfO')[1].text
+                try:
+                    a = int(ISBN)
+                except:
+                    ISBN = ''
             except:
                 pass
 
@@ -91,90 +93,61 @@ async def parse_film(session, url, conn, cur, semaphore):
                 pass
 
             try:
-                some_info = soup.find('div', class_='iszfik-2 NZYdY')
+                some_info = soup.find('div', class_='iszfik-2 gAFRve')
                 Description = some_info.text
             except:
                 pass
 
-
-
-
-
-
-
-
-
-
-            res = requests.get(photo_url, headers=header).text  # Получение страницы и передача user agent
-            soup = BeautifulSoup(res, "lxml")
-
-            photo_ = soup.find_all('div', class_='sc-7c0a9e7c-2 ghbUKT')[0]
-            img = photo_.find('img')
+            try:
+                some_info = soup.find('div', class_='m4n24q-0 dsNpLo cy-similar-content-slider')
+                some_info = some_info.find('div', class_='sc-1hf4y1s-2 bTSqUP swiper-wrapper')
+                some_info = some_info.find_all('div', class_='swiper-slide sc-12qqvjh-0 gzajCe')
+                for info in some_info:
+                    similar = info.find('div', class_='sc-7dmtki-0').find('a').get('href')
+                    Similars.append(similar)
+            except:
+                pass
 
             try:
-                imglink = img.get('srcset').split()[2]
+                photo_ = soup.find('div', class_='hh1ehr-0 kkiIwl').find('picture').find('img')
+                imglink = photo_.get('srcset').split(', ')[0]
                 image = requests.get(imglink).content
-                with open(r'imagine/' + h + '.jpg', 'wb') as imgfile:
+                with open(r'C:/Users/Dmitrii/Desktop/data/imagine_books/' + ISBN + '.jpg', 'wb') as imgfile:
                     imgfile.write(image)
             except:
-                imglink = img.get('src')
-                print(imglink)
-                image = requests.get(imglink).content
-                with open(r'imagine/' + h + '.jpg', 'wb') as imgfile:
-                    imgfile.write(image)
+                pass
 
-            try:
-                f = f + '/keywords'
-                res = requests.get(f, headers=header).text  # Получение страницы и передача user agent
-                soup = BeautifulSoup(res, "lxml")
-                key_words_html = soup.find_all('div', class_='ipc-metadata-list-summary-item__tc')
-                for word in key_words_html:
-                    key_words.append(word.text)  # Сохранение ключевых слов
-            except Exception as e:
-                print(f"Error parsing keywords for {name}: {e}")
-
-            cur.execute(f"""INSERT INTO films(
-                tag,
+            cur.execute(f"""INSERT INTO books(
+                ISBN,
                 Name,
+                Page,
+                Age,
                 URL,
-                Runtime,
                 Genres,
+                Topic,
                 Rating,
                 Number_of_ratings,
                 Description,
-                Release_date,
-                Country,
-                Budget,
-                Director,
-                Writer,
-                Actors,
-                key_words,
+                Author,
                 Similars) 
-                              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
-                h,
+                              VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+                ISBN,
                 Name,
-                URL_,
-                Run_time,
-                ', '.join(genres),
-                rating,
-                number_of_ratings,
-                description,
-                Release_date,
-                ', '.join(Country),
-                Budget,
-                Director,
-                Writer,
-                '; '.join(','.join(i) for i in Actors),
-                ', '.join(key_words),
-                ', '.join(similars)
+                Page,
+                Age,
+                url,
+                ','.join(Genres),
+                ','.join(Topic),
+                Rating,
+                Number_of_ratings,
+                Description,
+                Author,
+                ','.join(Similars)
             ))
             conn.commit()
 
-
-
-
         except Exception as e:
-            print(f"Error parsing {name}: {e}")
+            print(f"Error parsing {Name}: {e}")
 
     elif count_ <= max:
         count_ += 1
@@ -191,26 +164,26 @@ async def main():
         cur = conn.cursor()
         cur.execute('''
                CREATE TABLE IF NOT EXISTS books (
-               ISBN TEXT PRIMARY KEY,
+               ISBN TEXT NOT NULL,
                Name TEXT NOT NULL,
                Page TEXT NOT NULL,
                Age TEXT NOT NULL,
                URL TEXT NOT NULL,
-               Runtime TEXT NOT NULL,
                Genres TEXT NOT NULL,
                Topic TEXT NOT NULL,
                Rating TEXT NOT NULL,
                Number_of_ratings TEXT NOT NULL,
                Description TEXT NOT NULL,
-               Release_date TEXT NOT NULL,
                Author TEXT NOT NULL,
                Similars TEXT NOT NULL
                )
                ''')
         conn.commit()
         tasks = []
+        count = 0
         for url in all_films:
-            tasks.append(parse_film(session, url, conn, cur, semaphore))
+            count += 1
+            tasks.append(parse_film(session, url, conn, cur, semaphore, count))
 
         await asyncio.gather(*tasks)
 
