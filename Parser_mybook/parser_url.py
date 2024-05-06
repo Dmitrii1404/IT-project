@@ -6,7 +6,7 @@ import time
 
 pages = 200
 list_urls = []
-with open("movie_URL_IMDb.json", "a", encoding="UTF-8") as file:
+with open("book_urls.json", "a", encoding="UTF-8") as file:
     for i in range(100, pages+1):
         f = f'https://mybook.ru/catalog/books/?o=readers&page={i + 1}'
         print(i)

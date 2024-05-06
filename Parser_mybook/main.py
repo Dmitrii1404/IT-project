@@ -18,7 +18,7 @@ async def fetch(session, url, headers=None):
 
 
 async def parse_film(session, url, conn, cur, semaphore, count_):
-    max = 20
+    max = 1100
 
     ISBN = ''  # Код книги  ----
     Name = ''  # Название   ----
@@ -112,11 +112,12 @@ async def parse_film(session, url, conn, cur, semaphore, count_):
                 photo_ = soup.find('div', class_='hh1ehr-0 kkiIwl').find('picture').find('img')
                 imglink = photo_.get('srcset').split(', ')[0]
                 image = requests.get(imglink).content
-                with open(r'C:/Users/Dmitrii/Desktop/data/imagine_books/' + ISBN + '.jpg', 'wb') as imgfile:
+                with open(r'C:/Users/Dmitrii/Desktop/data/imagine_books/' + Name + '.jpg', 'wb') as imgfile:
                     imgfile.write(image)
             except:
                 pass
 
+            print(ISBN, Name, Rating) # чтоб понимать, парсится или нет
             cur.execute(f"""INSERT INTO books(
                 ISBN,
                 Name,
@@ -155,9 +156,9 @@ async def parse_film(session, url, conn, cur, semaphore, count_):
 
 
 async def main():
-    semaphore = asyncio.Semaphore(10)  # Ограничение на количество одновременно выполняемых задач
+    semaphore = asyncio.Semaphore(15)  # Ограничение на количество одновременно выполняемых задач
     async with aiohttp.ClientSession() as session:
-        with open("movie_URL_IMDb.json", "r", encoding="UTF-8") as file:
+        with open("book_urls.json", "r", encoding="UTF-8") as file:
             all_films = json.load(file)
 
         conn = sqlite3.connect('books_info.db')
