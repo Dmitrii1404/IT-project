@@ -20,6 +20,7 @@ driver = webdriver.Chrome(
     service=s, options=options
 )  # Создание драйвера + передача опций
 
+# Здесь я вручную выбираю какие страницы парсить
 # url = 'https://www.imdb.com/search/title/?title_type=feature&user_rating=5,10&sort=num_votes,desc&num_votes=5000,'  # ссылка на страницу
 # url = 'https://www.imdb.com/search/title/?title_type=feature&user_rating=5,10&sort=num_votes,desc&num_votes=5000,184100'
 # url = 'https://www.imdb.com/search/title/?title_type=feature&user_rating=5,10&sort=num_votes,desc&num_votes=5000,90747'
@@ -34,8 +35,6 @@ try:
     count = 0
     while count < 25:
         if driver.find_elements(By.CLASS_NAME, "ipc-see-more"):
-            # driver.execute_script("window.scrollBy(0, document.body.scrollHeight)")  # Прокрутка страницы до конца
-            # time.sleep(1)
             button = driver.find_element(By.CLASS_NAME, "ipc-see-more")
             actoins = ActionChains(driver)
             actoins.move_to_element(button).perform()
@@ -60,7 +59,10 @@ try:
 except Exception as ex:
     print(ex)
 finally:
-    with open("movies6500.html", "w", encoding="UTF-8") as file:
+    # Будет несколько файлов по 1300 ссылок на фильм, поэтому в конце названия файла подпись с числом
+    with open(
+        "C:/Users/Dmitrii/Desktop/data/DB/movies6500.html", "w", encoding="UTF-8"
+    ) as file:
         file.write(driver.page_source)
     time.sleep(10)
     driver.close()

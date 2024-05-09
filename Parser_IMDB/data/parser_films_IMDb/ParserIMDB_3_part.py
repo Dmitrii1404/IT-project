@@ -14,7 +14,7 @@ count_ = 0
 async def fetch(session, url, headers=None):
     async with session.get(url, headers=headers) as response:
         # Задержка отправления, чтоб не забанил сайт (и мб это помогает прогрузить номально страницу)
-        # await asyncio.sleep(1)
+        await asyncio.sleep(1)
         return await response.text()
 
 
@@ -207,7 +207,9 @@ async def parse_film(session, name, url, conn, cur, semaphore):
             try:
                 imglink = img.get("srcset").split()[2]
                 image = requests.get(imglink).content
-                with open(r"imagine/" + h + ".jpg", "wb") as imgfile:
+                with open(
+                    r"C:/Users/Dmitrii/Desktop/data/DB/imagine/" + h + ".jpg", "wb"
+                ) as imgfile:
                     imgfile.write(image)
             except:
                 imglink = img.get("src")
@@ -284,10 +286,14 @@ async def main():
         10
     )  # Ограничение на количество одновременно выполняемых задач
     async with aiohttp.ClientSession() as session:
-        with open("movie_URL_IMDb.json", "r", encoding="UTF-8") as file:
+        with open(
+            "C:/Users/Dmitrii/Desktop/data/DB/movie_URL_IMDb.json",
+            "r",
+            encoding="UTF-8",
+        ) as file:
             all_films = json.load(file)
 
-        conn = sqlite3.connect("films_info.db")
+        conn = sqlite3.connect("C:/Users/Dmitrii/Desktop/data/DB/films_info.db")
         cur = conn.cursor()
         cur.execute(
             """
