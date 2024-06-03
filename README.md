@@ -45,8 +45,10 @@
 
 
 # Архитектура проекта
+[Miro](https://miro.com/app/board/uXjVKaXUXMw=/)
 ![image](https://github.com/Dmitrii1404/IT-project/assets/145994444/0c0fc5d9-5160-43e1-afb6-90df99c1bd8f)
 
 # Трекер задач 
 [Notion](https://www.notion.so/bd793c4221284e228ae5a3846eb33be8?v=591e20ba10374947b63632ed507a48d9)
+
  
